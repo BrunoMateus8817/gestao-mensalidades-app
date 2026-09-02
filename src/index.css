@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --color-appDark: #020617;
+  --color-appSlate: #0f172a;
+  --color-appCard: #0b0f19;
+  --color-appBorder: #1e293b;
+  --color-appGold: #f59e0b;
+  --color-appGoldDark: #d97706;
+  --color-appIndigo: #6366f1;
+  --color-appSand: #cbd5e1;
+  --font-military: 'Chakra Petch', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: #020617;
+    color: #f1f5f9;
+  }
+}
+
+/* Custom scrollbar for Bento layout */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+  }
+  #print-area {
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+

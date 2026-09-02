@@ -1,0 +1,6 @@
+{
+  "name": "Gestão de Alojamento - Rádio Patrulha",
+  "description": "Sistema de gestão financeira, controle de mensalidades, caixa e efetivo do Alojamento da Rádio Patrulha - 3° BPM.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

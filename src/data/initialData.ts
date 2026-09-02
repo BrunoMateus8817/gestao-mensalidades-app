@@ -1,4 +1,5 @@
 import { Policial, MovimentacaoCaixa, ConfiguracaoApp } from '../types';
+import { SAMPLE_COMPROVANTE_CHUVEIRO, SAMPLE_COMPROVANTE_AGUA } from '../utils/comprovanteHelper';
 
 export const DEFAULT_CONFIG: ConfiguracaoApp = {
   pixChave: "3bpm.radiopatrulha@pm.gov.br",
@@ -6,7 +7,7 @@ export const DEFAULT_CONFIG: ConfiguracaoApp = {
   pixNome: "Tesouraria Alojamento RP - 3° BPM",
   pixBanco: "Banco do Brasil / Nubank",
   valorMensalidadePadrao: 50.00,
-  googleAppsScriptUrl: "https://script.google.com/macros/s/AKfycbyFrshcFhvHSYSzY_Z2biqNbH8fguls7odrnl9Zizd4MP4S1sZ3iSJsfhavxkDK8LO2/exec",
+  googleAppsScriptUrl: "https://script.google.com/macros/s/AKfycbxm1l4WvI9xWJcHgPu9-hX3-CiJz2ZyMlxb3_NntQoDo1qvzKm_Ogi5nS7AdQdMHQO5/exec",
   batalhao: "3° Batalhão de Polícia Militar",
   alojamento: "Alojamento da Rádio Patrulha (RP)",
   responsavelTesouraria: "3° SGT MATEUS / SD RONIERY",
@@ -164,59 +165,37 @@ export const INITIAL_CAIXA: MovimentacaoCaixa[] = [
     linha: 2,
     data: "01/09/2026",
     tipo: "Entrada",
-    desc: "Saldo remanescente do mês anterior (Agosto/2026)",
+    desc: "Mensalidades",
     categoria: "Doação / Crédito",
-    resp: "Tesouraria RP",
-    valor: 245.00
+    resp: "SALDO DO MÊS DE AGOSTO",
+    valor: 40.00
   },
   {
     id: "cx-2",
     linha: 3,
     data: "02/09/2026",
     tipo: "Saída",
-    desc: "Compra de produtos de limpeza (Desinfetante, Sabão em pó, Água sanitária)",
+    desc: "Chuveiro Elétrico",
     categoria: "Material de Limpeza",
     resp: "SD RONIERY",
-    valor: 86.50
+    valor: 237.00,
+    comprovanteUrl: SAMPLE_COMPROVANTE_CHUVEIRO,
+    comprovanteNome: "comprovante_chuveiro_eletrico_nf.svg",
+    comprovanteTipo: "imagem",
+    observacoes: "Instalação no alojamento RP"
   },
   {
     id: "cx-3",
     linha: 4,
     data: "02/09/2026",
     tipo: "Saída",
-    desc: "Compra de 4 garrafões de água mineral 20L + Café torrado",
-    categoria: "Alimentação & Café",
-    resp: "CB SILVA",
-    valor: 64.00
-  },
-  {
-    id: "cx-4",
-    linha: 5,
-    data: "03/09/2026",
-    tipo: "Saída",
-    desc: "Troca de 2 lâmpadas LED tubulares do alojamento e fita isolante",
-    categoria: "Manutenção & Reparos",
-    resp: "3º SGT MATEUS",
-    valor: 48.00
-  },
-  {
-    id: "cx-5",
-    linha: 6,
-    data: "03/09/2026",
-    tipo: "Saída",
-    desc: "Abastecimento extraordinário / gasolina gerador e apoio à logística",
-    categoria: "Combustível",
-    resp: "CB MOURA",
-    valor: 75.00
-  },
-  {
-    id: "cx-6",
-    linha: 7,
-    data: "04/09/2026",
-    tipo: "Entrada",
-    desc: "Doação avulsa para melhorias no Ar-Condicionado",
-    categoria: "Doação / Crédito",
-    resp: "1º TEN EDUARDO",
-    valor: 100.00
+    desc: "19 garrafões de água/ referentes ao mês de agosto",
+    categoria: "Material de Limpeza",
+    resp: "SGT MATEUS",
+    valor: 171.00,
+    comprovanteUrl: SAMPLE_COMPROVANTE_AGUA,
+    comprovanteNome: "recibo_19_garrafoes_agua.svg",
+    comprovanteTipo: "imagem",
+    observacoes: "Consumo do mês de agosto"
   }
 ];

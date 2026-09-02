@@ -25,15 +25,29 @@ export interface Policial {
   observacoes?: string;
 }
 
+export type CategoriaMovimentacao = 
+  | 'Material de Limpeza'
+  | 'Agua Mineral'
+  | 'Doação / Crédito'
+  | 'Internet'
+  | 'Manutenção e Reparos'
+  | 'Alimentos'
+  | 'Combustível'
+  | 'Outros'
+  | string;
+
 export interface MovimentacaoCaixa {
   id: string;
   linha?: number;
   data: string;
   tipo: TipoMovimentacao;
   desc: string;
-  categoria: 'Material de Limpeza' | 'Manutenção & Reparos' | 'Combustível' | 'Alimentação & Café' | 'Conforto & Eletro' | 'Doação / Crédito' | 'Outros' | string;
+  categoria: CategoriaMovimentacao;
   resp: string;
   valor: number;
+  comprovanteUrl?: string;
+  comprovanteNome?: string;
+  comprovanteTipo?: 'imagem' | 'pdf' | 'arquivo';
   observacoes?: string;
 }
 

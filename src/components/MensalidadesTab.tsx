@@ -279,7 +279,7 @@ export const MensalidadesTab: React.FC<MensalidadesTabProps> = ({
               className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-black flex items-center justify-center space-x-1.5 shadow-xs transition-all cursor-pointer whitespace-nowrap"
             >
               <Plus className="w-4 h-4 text-amber-400" />
-              <span>Adicionar Militar</span>
+              <span>Cadastrar Policial</span>
             </button>
           </div>
 
@@ -630,9 +630,10 @@ export const MensalidadesTab: React.FC<MensalidadesTabProps> = ({
               <button
                 type="button"
                 onClick={confirmarBaixa}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs shadow-md transition-all cursor-pointer"
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                Confirmar Quitação
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>Salvar Pagamento</span>
               </button>
             </div>
 

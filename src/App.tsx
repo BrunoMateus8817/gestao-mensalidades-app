@@ -17,9 +17,15 @@ import { RPLogo } from './components/RPLogo';
 
 import { Policial, MovimentacaoCaixa, ConfiguracaoApp, StatusPagamento } from './types';
 import { INITIAL_POLICIAIS, INITIAL_CAIXA, DEFAULT_CONFIG } from './data/initialData';
+import { 
+  salvarMensalidadeGoogleSheets, 
+  salvarCaixaGoogleSheets, 
+  formatarMesAnoReferencia, 
+  formatarValorMoedaSheets 
+} from './services/sheetsApi';
 
 const LOCAL_STORAGE_KEY_POLICIAIS = 'rp_3bpm_policiais_v1';
-const LOCAL_STORAGE_KEY_CAIXA = 'rp_3bpm_caixa_v1';
+const LOCAL_STORAGE_KEY_CAIXA = 'rp_3bpm_caixa_v3';
 const LOCAL_STORAGE_KEY_CONFIG = 'rp_3bpm_config_v1';
 
 export default function App() {
@@ -45,14 +51,21 @@ export default function App() {
   const [config, setConfig] = useState<ConfiguracaoApp>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY_CONFIG);
-      return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (!parsed.googleAppsScriptUrl || parsed.googleAppsScriptUrl.includes('AKfycbyFrshc')) {
+          parsed.googleAppsScriptUrl = DEFAULT_CONFIG.googleAppsScriptUrl;
+        }
+        return parsed;
+      }
+      return DEFAULT_CONFIG;
     } catch {
       return DEFAULT_CONFIG;
     }
   });
 
   // Navigation & Modals State
-  const [activeTab, setActiveTab] = useState<'mensalidades' | 'caixa' | 'cadastro'>('mensalidades');
+  const [activeTab, setActiveTab] = useState<'mensalidades' | 'caixa' | 'cadastro'>('caixa');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -61,6 +74,7 @@ export default function App() {
   const [reciboPolicial, setReciboPolicial] = useState<Policial | null>(null);
   const [showGrupoWhatsApp, setShowGrupoWhatsApp] = useState<boolean>(false);
   const [showNovoGasto, setShowNovoGasto] = useState<boolean>(false);
+  const [gastoParaEditar, setGastoParaEditar] = useState<MovimentacaoCaixa | null>(null);
   const [showNovoPolicial, setShowNovoPolicial] = useState<boolean>(false);
   const [policialParaEditar, setPolicialParaEditar] = useState<Policial | null>(null);
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -153,7 +167,7 @@ export default function App() {
     }
   };
 
-  // Dar Baixa em Mensalidade
+  // Dar Baixa em Mensalidade / Salvar Pagamento
   const handleDarBaixa = async (id: string, forma: 'PIX' | 'Dinheiro' | 'Transferência' = 'PIX') => {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     
@@ -175,21 +189,25 @@ export default function App() {
 
     showToast(`✅ Baixa confirmada para ${alvo.nome}!`);
 
-    // If connected to Google Apps Script, send POST
-    if (config.googleAppsScriptUrl && alvo.linha) {
-      try {
-        await fetch(config.googleAppsScriptUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({
-            acao: 'darBaixa',
-            linha: alvo.linha,
-            forma
-          })
-        });
-      } catch (e) {
-        console.warn('Erro ao atualizar na planilha remota:', e);
+    // Enviar requisição HTTP POST para a planilha Google Sheets no formato JSON solicitado:
+    // { "aba": "Mensalidades", "valores": ["09/2026", "NOME_DO_POLICIAL", "R$ 50,00", "PIX", "Pago"] }
+    const mesAno = formatarMesAnoReferencia(config.mesReferencia, config.anoReferencia);
+    const valorFormatado = formatarValorMoedaSheets(alvo.valor);
+
+    try {
+      const res = await salvarMensalidadeGoogleSheets({
+        mesAno,
+        nomePolicial: alvo.nome,
+        valor: valorFormatado,
+        forma,
+        status: 'Pago',
+        url: config.googleAppsScriptUrl
+      });
+      if (res.success) {
+        showToast(`✅ Pagamento de ${alvo.nome} salvo na planilha Google Sheets!`);
       }
+    } catch (e) {
+      console.warn('Erro ao atualizar na planilha remota:', e);
     }
   };
 
@@ -209,8 +227,19 @@ export default function App() {
     showToast(`Status alterado para ${novoStatus}.`);
   };
 
-  // Salvar Novo Gasto / Movimentação no Caixa
+  // Salvar ou Editar Movimentação no Caixa
   const handleSalvarGasto = async (novoGasto: Omit<MovimentacaoCaixa, 'id'>) => {
+    if (gastoParaEditar) {
+      const movAtualizada: MovimentacaoCaixa = {
+        ...gastoParaEditar,
+        ...novoGasto
+      };
+      setCaixa(prev => prev.map(c => c.id === gastoParaEditar.id ? movAtualizada : c));
+      setGastoParaEditar(null);
+      showToast(`✅ Movimentação atualizada com sucesso!`);
+      return;
+    }
+
     const novaMov: MovimentacaoCaixa = {
       ...novoGasto,
       id: `cx-${Date.now()}`
@@ -221,22 +250,25 @@ export default function App() {
 
     if (config.googleAppsScriptUrl) {
       try {
-        await fetch(config.googleAppsScriptUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({
-            acao: 'salvarCaixa',
-            data: novaMov.data,
-            tipo: novaMov.tipo,
-            desc: novaMov.desc,
-            resp: novaMov.resp,
-            valor: novaMov.valor
-          })
+        await salvarCaixaGoogleSheets({
+          data: novaMov.data,
+          tipo: novaMov.tipo,
+          desc: novaMov.desc,
+          categoria: novaMov.categoria,
+          resp: novaMov.resp,
+          valor: novaMov.valor,
+          url: config.googleAppsScriptUrl
         });
       } catch (e) {
         console.warn('Erro ao salvar no Google Apps Script:', e);
       }
     }
+  };
+
+  // Atualizar comprovante ou dados diretamente de uma movimentação
+  const handleAtualizarGasto = (movAtualizada: MovimentacaoCaixa) => {
+    setCaixa(prev => prev.map(c => c.id === movAtualizada.id ? movAtualizada : c));
+    showToast('✅ Comprovante anexado à despesa com sucesso!');
   };
 
   // Remover Movimentação do Caixa
@@ -266,7 +298,10 @@ export default function App() {
   };
 
   // Salvar Militar (Novo ou Editado)
-  const handleSalvarPolicial = (dados: Omit<Policial, 'id'>, idEditar?: string) => {
+  const handleSalvarPolicial = async (dados: Omit<Policial, 'id'>, idEditar?: string) => {
+    const mesAno = formatarMesAnoReferencia(config.mesReferencia, config.anoReferencia);
+    const valorFormatado = formatarValorMoedaSheets(dados.valor);
+
     if (idEditar) {
       setPoliciais(prev => prev.map(p => {
         if (p.id === idEditar) {
@@ -285,6 +320,23 @@ export default function App() {
       };
       setPoliciais(prev => [...prev, novoPolicial]);
       showToast(`Militar ${novoPolicial.nome} adicionado ao efetivo!`);
+    }
+
+    // Sincronizar novo cadastro/mensalidade com a aba Mensalidades do Google Sheets
+    try {
+      const res = await salvarMensalidadeGoogleSheets({
+        mesAno,
+        nomePolicial: dados.nome,
+        valor: valorFormatado,
+        forma: dados.forma || 'PIX',
+        status: dados.status || 'Pendente',
+        url: config.googleAppsScriptUrl
+      });
+      if (res.success) {
+        showToast(`✅ ${dados.nome} registrado na planilha Google Sheets!`);
+      }
+    } catch (e) {
+      console.warn('Erro ao salvar no Google Sheets:', e);
     }
   };
 
@@ -433,8 +485,16 @@ export default function App() {
         {activeTab === 'caixa' && (
           <CaixaTab
             caixa={caixa}
-            onOpenNovoGasto={() => setShowNovoGasto(true)}
+            onOpenNovoGasto={() => {
+              setGastoParaEditar(null);
+              setShowNovoGasto(true);
+            }}
             onRemoverGasto={handleRemoverGasto}
+            onAtualizarGasto={handleAtualizarGasto}
+            onEditarGasto={(mov) => {
+              setGastoParaEditar(mov);
+              setShowNovoGasto(true);
+            }}
           />
         )}
 
@@ -505,7 +565,11 @@ export default function App() {
       {showNovoGasto && (
         <ModalLancamentoCaixa
           onSalvar={handleSalvarGasto}
-          onClose={() => setShowNovoGasto(false)}
+          movimentacaoParaEditar={gastoParaEditar}
+          onClose={() => {
+            setShowNovoGasto(false);
+            setGastoParaEditar(null);
+          }}
         />
       )}
 

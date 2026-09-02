@@ -208,7 +208,7 @@ export const ModalCadastrarPolicial: React.FC<ModalCadastrarPolicialProps> = ({
               type="submit"
               className="flex-1 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
             >
-              {policialEditar ? 'Atualizar Militar' : 'Salvar Militar'}
+              {policialEditar ? 'Atualizar Militar' : 'Cadastrar Policial'}
             </button>
           </div>
         </form>
